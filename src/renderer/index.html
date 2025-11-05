@@ -1,0 +1,218 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Fax Batch Sender</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="container">
+        <!-- Header -->
+        <header class="header">
+            <h1>📠 Fax Batch Sender</h1>
+            <div class="connection-status">
+                <button id="testConnectionBtn" class="btn btn-small">Test Connection</button>
+                <span id="connectionStatus" class="status-indicator">●</span>
+            </div>
+        </header>
+
+        <!-- Main Content -->
+        <div class="main-content">
+            <!-- Tabs -->
+            <div class="tabs">
+                <button class="tab-btn active" data-tab="send">Send Batch</button>
+                <button class="tab-btn" data-tab="monitor">Monitor</button>
+                <button class="tab-btn" data-tab="history">History</button>
+                <button class="tab-btn" data-tab="dashboard">Dashboard</button>
+            </div>
+
+            <!-- Tab Content: Send Batch -->
+            <div id="send-tab" class="tab-content active">
+                <div class="form-container">
+                    <h2>Create Batch Fax Job</h2>
+
+                    <form id="batchForm">
+                        <div class="form-group">
+                            <label for="batchName">Batch Name:</label>
+                            <input type="text" id="batchName" required placeholder="e.g., Monthly Newsletter - January 2024">
+                        </div>
+
+                        <div class="form-group">
+                            <label for="userId">User ID:</label>
+                            <input type="text" id="userId" required placeholder="e.g., admin">
+                        </div>
+
+                        <div class="form-group">
+                            <label for="filePath">File to Send:</label>
+                            <div class="file-input-group">
+                                <input type="text" id="filePath" readonly required placeholder="Select a file...">
+                                <button type="button" id="selectFileBtn" class="btn">Browse...</button>
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="destinationNumber">Destination Fax Number:</label>
+                            <input type="text" id="destinationNumber" required placeholder="e.g., 555-1234">
+                        </div>
+
+                        <div class="form-group">
+                            <label for="recipientName">Recipient Name (Optional):</label>
+                            <input type="text" id="recipientName" placeholder="e.g., John Doe">
+                        </div>
+
+                        <div class="form-group">
+                            <label for="totalCount">Number of Faxes to Send:</label>
+                            <input type="number" id="totalCount" required min="1" max="100000" value="1" placeholder="e.g., 30000">
+                            <small>Enter the number of identical faxes to send (e.g., 30000)</small>
+                        </div>
+
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="priority">Priority:</label>
+                                <select id="priority">
+                                    <option value="Normal">Normal</option>
+                                    <option value="High">High</option>
+                                    <option value="Low">Low</option>
+                                </select>
+                            </div>
+
+                            <div class="form-group">
+                                <label for="billingCode1">Billing Code 1 (Optional):</label>
+                                <input type="text" id="billingCode1" placeholder="Account">
+                            </div>
+
+                            <div class="form-group">
+                                <label for="billingCode2">Billing Code 2 (Optional):</label>
+                                <input type="text" id="billingCode2" placeholder="Matter">
+                            </div>
+                        </div>
+
+                        <button type="submit" class="btn btn-primary btn-large">Start Batch</button>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Tab Content: Monitor -->
+            <div id="monitor-tab" class="tab-content">
+                <h2>Current Batch Progress</h2>
+
+                <div id="noActiveBatch" class="empty-state">
+                    <p>No active batch processing</p>
+                </div>
+
+                <div id="batchProgress" class="batch-progress" style="display: none;">
+                    <div class="progress-header">
+                        <h3 id="currentBatchName">Batch Name</h3>
+                        <span id="currentBatchId" class="batch-id"></span>
+                    </div>
+
+                    <div class="stats-grid">
+                        <div class="stat-card">
+                            <div class="stat-value" id="totalCount">0</div>
+                            <div class="stat-label">Total Faxes</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-value" id="processedCount">0</div>
+                            <div class="stat-label">Processed</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-value" id="failedCount">0</div>
+                            <div class="stat-label">Failed</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-value" id="progressPercent">0%</div>
+                            <div class="stat-label">Progress</div>
+                        </div>
+                    </div>
+
+                    <div class="progress-bar-container">
+                        <div class="progress-bar">
+                            <div id="progressBar" class="progress-fill" style="width: 0%"></div>
+                        </div>
+                    </div>
+
+                    <div id="activityLog" class="activity-log">
+                        <h4>Activity Log</h4>
+                        <div id="activityLogContent" class="log-content"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Tab Content: History -->
+            <div id="history-tab" class="tab-content">
+                <h2>Batch History</h2>
+
+                <button id="refreshHistoryBtn" class="btn">Refresh</button>
+
+                <div id="historyTable" class="table-container">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Batch ID</th>
+                                <th>Batch Name</th>
+                                <th>User</th>
+                                <th>Total</th>
+                                <th>Completed</th>
+                                <th>Failed</th>
+                                <th>Status</th>
+                                <th>Created</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="historyTableBody">
+                            <tr>
+                                <td colspan="9" class="loading">Loading...</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Tab Content: Dashboard -->
+            <div id="dashboard-tab" class="tab-content">
+                <h2>Dashboard</h2>
+
+                <button id="refreshDashboardBtn" class="btn">Refresh</button>
+
+                <div class="dashboard-section">
+                    <h3>Today's Statistics</h3>
+                    <div class="stats-grid">
+                        <div class="stat-card">
+                            <div class="stat-value" id="totalToday">0</div>
+                            <div class="stat-label">Total Faxes Today</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-value" id="succeededToday">0</div>
+                            <div class="stat-label">Succeeded</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-value" id="failedToday">0</div>
+                            <div class="stat-label">Failed</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-value" id="avgDurationToday">0s</div>
+                            <div class="stat-label">Avg Duration</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="dashboard-section">
+                    <h3>Performance Metrics (Last 7 Days)</h3>
+                    <div id="performanceMetrics" class="metrics-container">
+                        <p>Loading...</p>
+                    </div>
+                </div>
+
+                <div class="dashboard-section">
+                    <h3>Grafana Integration</h3>
+                    <p>Access your Grafana dashboard to view detailed analytics:</p>
+                    <a href="#" id="grafanaLink" class="btn" target="_blank">Open Grafana Dashboard</a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="renderer.js"></script>
+</body>
+</html>
