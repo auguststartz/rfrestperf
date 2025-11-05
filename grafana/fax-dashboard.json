@@ -1,0 +1,258 @@
+{
+  "dashboard": {
+    "title": "Fax Batch Processing Dashboard",
+    "tags": ["fax", "performance", "metrics"],
+    "timezone": "browser",
+    "schemaVersion": 38,
+    "version": 1,
+    "refresh": "10s",
+    "panels": [
+      {
+        "id": 1,
+        "title": "Total Faxes Processed",
+        "type": "stat",
+        "gridPos": { "x": 0, "y": 0, "w": 6, "h": 4 },
+        "targets": [
+          {
+            "refId": "A",
+            "rawSql": "SELECT SUM(total_submitted) as value FROM fax_metrics WHERE date >= NOW() - INTERVAL '24 hours'",
+            "format": "table"
+          }
+        ],
+        "options": {
+          "reduceOptions": {
+            "values": false,
+            "calcs": ["lastNotNull"]
+          },
+          "colorMode": "value",
+          "graphMode": "area",
+          "textMode": "value_and_name"
+        }
+      },
+      {
+        "id": 2,
+        "title": "Success Rate",
+        "type": "stat",
+        "gridPos": { "x": 6, "y": 0, "w": 6, "h": 4 },
+        "targets": [
+          {
+            "refId": "A",
+            "rawSql": "SELECT ROUND(SUM(total_succeeded)::numeric / NULLIF(SUM(total_submitted), 0) * 100, 2) as value FROM fax_metrics WHERE date >= NOW() - INTERVAL '24 hours'",
+            "format": "table"
+          }
+        ],
+        "options": {
+          "reduceOptions": {
+            "values": false,
+            "calcs": ["lastNotNull"]
+          },
+          "colorMode": "value",
+          "unit": "percent",
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              { "value": 0, "color": "red" },
+              { "value": 80, "color": "yellow" },
+              { "value": 95, "color": "green" }
+            ]
+          }
+        }
+      },
+      {
+        "id": 3,
+        "title": "Average Processing Time",
+        "type": "stat",
+        "gridPos": { "x": 12, "y": 0, "w": 6, "h": 4 },
+        "targets": [
+          {
+            "refId": "A",
+            "rawSql": "SELECT ROUND(AVG(avg_total_time) / 1000, 2) as value FROM fax_metrics WHERE date >= NOW() - INTERVAL '24 hours' AND avg_total_time IS NOT NULL",
+            "format": "table"
+          }
+        ],
+        "options": {
+          "reduceOptions": {
+            "values": false,
+            "calcs": ["lastNotNull"]
+          },
+          "unit": "s",
+          "colorMode": "value"
+        }
+      },
+      {
+        "id": 4,
+        "title": "Failed Faxes",
+        "type": "stat",
+        "gridPos": { "x": 18, "y": 0, "w": 6, "h": 4 },
+        "targets": [
+          {
+            "refId": "A",
+            "rawSql": "SELECT SUM(total_failed) as value FROM fax_metrics WHERE date >= NOW() - INTERVAL '24 hours'",
+            "format": "table"
+          }
+        ],
+        "options": {
+          "reduceOptions": {
+            "values": false,
+            "calcs": ["lastNotNull"]
+          },
+          "colorMode": "value",
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              { "value": 0, "color": "green" },
+              { "value": 10, "color": "yellow" },
+              { "value": 50, "color": "red" }
+            ]
+          }
+        }
+      },
+      {
+        "id": 5,
+        "title": "Faxes Over Time",
+        "type": "timeseries",
+        "gridPos": { "x": 0, "y": 4, "w": 12, "h": 8 },
+        "targets": [
+          {
+            "refId": "A",
+            "rawSql": "SELECT date + (hour || ' hours')::interval as time, total_submitted as \"Submitted\", total_succeeded as \"Succeeded\", total_failed as \"Failed\" FROM fax_metrics WHERE date >= NOW() - INTERVAL '7 days' ORDER BY time",
+            "format": "time_series"
+          }
+        ],
+        "fieldConfig": {
+          "defaults": {
+            "custom": {
+              "drawStyle": "line",
+              "lineInterpolation": "smooth",
+              "fillOpacity": 10
+            }
+          }
+        }
+      },
+      {
+        "id": 6,
+        "title": "Processing Time Breakdown",
+        "type": "timeseries",
+        "gridPos": { "x": 12, "y": 4, "w": 12, "h": 8 },
+        "targets": [
+          {
+            "refId": "A",
+            "rawSql": "SELECT date + (hour || ' hours')::interval as time, ROUND(avg_conversion_time / 1000, 2) as \"Conversion\", ROUND(avg_transmission_time / 1000, 2) as \"Transmission\" FROM fax_metrics WHERE date >= NOW() - INTERVAL '7 days' AND avg_conversion_time IS NOT NULL ORDER BY time",
+            "format": "time_series"
+          }
+        ],
+        "fieldConfig": {
+          "defaults": {
+            "unit": "s",
+            "custom": {
+              "drawStyle": "line",
+              "lineInterpolation": "smooth",
+              "fillOpacity": 10
+            }
+          }
+        }
+      },
+      {
+        "id": 7,
+        "title": "Real-time Fax Activity (Last Hour)",
+        "type": "table",
+        "gridPos": { "x": 0, "y": 12, "w": 24, "h": 8 },
+        "targets": [
+          {
+            "refId": "A",
+            "rawSql": "SELECT * FROM v_fax_realtime ORDER BY created_at DESC LIMIT 100",
+            "format": "table"
+          }
+        ],
+        "options": {
+          "showHeader": true,
+          "sortBy": [{ "displayName": "created_at", "desc": true }]
+        },
+        "fieldConfig": {
+          "overrides": [
+            {
+              "matcher": { "id": "byName", "options": "status" },
+              "properties": [
+                {
+                  "id": "custom.displayMode",
+                  "value": "color-background"
+                }
+              ]
+            }
+          ]
+        }
+      },
+      {
+        "id": 8,
+        "title": "Batch Performance",
+        "type": "table",
+        "gridPos": { "x": 0, "y": 20, "w": 24, "h": 8 },
+        "targets": [
+          {
+            "refId": "A",
+            "rawSql": "SELECT * FROM v_batch_performance WHERE created_at >= NOW() - INTERVAL '7 days' ORDER BY created_at DESC LIMIT 50",
+            "format": "table"
+          }
+        ],
+        "options": {
+          "showHeader": true
+        }
+      },
+      {
+        "id": 9,
+        "title": "Hourly Throughput",
+        "type": "bargauge",
+        "gridPos": { "x": 0, "y": 28, "w": 12, "h": 8 },
+        "targets": [
+          {
+            "refId": "A",
+            "rawSql": "SELECT hour, SUM(total_submitted) as value FROM fax_metrics WHERE date = CURRENT_DATE GROUP BY hour ORDER BY hour",
+            "format": "table"
+          }
+        ],
+        "options": {
+          "orientation": "horizontal",
+          "displayMode": "gradient"
+        },
+        "fieldConfig": {
+          "defaults": {
+            "unit": "short",
+            "thresholds": {
+              "mode": "absolute",
+              "steps": [
+                { "value": 0, "color": "green" },
+                { "value": 100, "color": "yellow" },
+                { "value": 500, "color": "red" }
+              ]
+            }
+          }
+        }
+      },
+      {
+        "id": 10,
+        "title": "Performance Percentiles",
+        "type": "gauge",
+        "gridPos": { "x": 12, "y": 28, "w": 12, "h": 8 },
+        "targets": [
+          {
+            "refId": "A",
+            "rawSql": "SELECT ROUND(PERCENTILE_CONT(0.50) WITHIN GROUP (ORDER BY total_duration) / 1000, 2) as \"P50\", ROUND(PERCENTILE_CONT(0.95) WITHIN GROUP (ORDER BY total_duration) / 1000, 2) as \"P95\", ROUND(PERCENTILE_CONT(0.99) WITHIN GROUP (ORDER BY total_duration) / 1000, 2) as \"P99\" FROM fax_submissions WHERE queued_at >= NOW() - INTERVAL '24 hours' AND status = 'sent'",
+            "format": "table"
+          }
+        ],
+        "options": {
+          "showThresholdLabels": true,
+          "showThresholdMarkers": true
+        },
+        "fieldConfig": {
+          "defaults": {
+            "unit": "s",
+            "min": 0,
+            "max": 120
+          }
+        }
+      }
+    ]
+  },
+  "overwrite": true
+}

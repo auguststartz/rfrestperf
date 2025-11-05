@@ -1,0 +1,51 @@
+{
+  "name": "fax-batch-sender",
+  "version": "1.0.0",
+  "description": "Electron app for batch fax sending with PostgreSQL tracking and Grafana integration",
+  "main": "src/main.js",
+  "scripts": {
+    "start": "electron .",
+    "dev": "electron . --dev",
+    "build": "electron-builder",
+    "postinstall": "electron-builder install-app-deps",
+    "db:migrate": "node src/database/migrate.js"
+  },
+  "keywords": [
+    "electron",
+    "fax",
+    "batch",
+    "postgresql",
+    "grafana"
+  ],
+  "author": "Your Name",
+  "license": "MIT",
+  "dependencies": {
+    "axios": "^1.6.0",
+    "pg": "^8.11.3",
+    "dotenv": "^16.3.1",
+    "form-data": "^4.0.0",
+    "winston": "^3.11.0",
+    "date-fns": "^2.30.0"
+  },
+  "devDependencies": {
+    "electron": "^27.0.0",
+    "electron-builder": "^24.6.4"
+  },
+  "build": {
+    "appId": "com.faxbatch.app",
+    "productName": "Fax Batch Sender",
+    "directories": {
+      "output": "dist"
+    },
+    "files": [
+      "src/**/*",
+      "package.json"
+    ],
+    "win": {
+      "target": "nsis"
+    },
+    "linux": {
+      "target": "AppImage"
+    }
+  }
+}
