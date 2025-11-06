@@ -3,6 +3,7 @@
   "version": "1.0.0",
   "description": "Electron app for batch fax sending with PostgreSQL tracking and Grafana integration",
   "main": "src/main.js",
+  "//": "Note: 'boolean' deprecation warning is from Electron's dependencies and can be safely ignored",
   "scripts": {
     "start": "electron .",
     "dev": "electron . --dev",
@@ -20,16 +21,21 @@
   "author": "Your Name",
   "license": "MIT",
   "dependencies": {
-    "axios": "^1.6.0",
-    "pg": "^8.11.3",
-    "dotenv": "^16.3.1",
-    "form-data": "^4.0.0",
-    "winston": "^3.11.0",
+    "axios": "^1.7.9",
+    "pg": "^8.13.1",
+    "dotenv": "^16.4.7",
+    "form-data": "^4.0.1",
+    "winston": "^3.17.0",
     "date-fns": "^2.30.0"
   },
   "devDependencies": {
-    "electron": "^27.0.0",
-    "electron-builder": "^24.6.4"
+    "electron": "^27.3.11",
+    "electron-builder": "^24.13.3"
+  },
+  "overrides": {
+    "glob": "^10.4.5",
+    "inflight": "npm:@lukekarrys/inflight@^2.0.1",
+    "boolean": "^3.2.0"
   },
   "build": {
     "appId": "com.faxbatch.app",

@@ -69,6 +69,8 @@ cd rfrestperf
 npm install
 ```
 
+**Note:** You may see a deprecation warning for the `boolean` package during installation. This is a transitive dependency from Electron and can be safely ignored - it doesn't affect the application's functionality.
+
 ### 2. Configure (2 minutes)
 
 Create `.env` file:
