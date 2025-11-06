@@ -9,6 +9,57 @@ Get up and running with the Fax Batch Sender in 5 minutes!
 - [ ] OpenText Fax Server accessible
 - [ ] Fax server credentials available
 
+## Installing PostgreSQL (if needed)
+
+If you get an error like "You must install at least one postgresql-client-<version> package" when running `psql --version`, you need to install PostgreSQL:
+
+### Ubuntu/Debian Linux
+```bash
+# Install PostgreSQL server and client
+sudo apt update
+sudo apt install postgresql postgresql-contrib
+
+# Start PostgreSQL service
+sudo systemctl start postgresql
+sudo systemctl enable postgresql
+
+# Verify installation
+psql --version
+```
+
+### macOS
+```bash
+# Using Homebrew
+brew install postgresql@15
+
+# Start PostgreSQL service
+brew services start postgresql@15
+
+# Verify installation
+psql --version
+```
+
+### Windows
+Download and install from: https://www.postgresql.org/download/windows/
+
+Or using Chocolatey:
+```powershell
+choco install postgresql
+```
+
+### Docker (All platforms)
+```bash
+# Run PostgreSQL in Docker
+docker run --name fax-postgres \
+  -e POSTGRES_PASSWORD=postgres \
+  -e POSTGRES_DB=fax_tracking \
+  -p 5432:5432 \
+  -d postgres:15
+
+# Verify it's running
+docker ps
+```
+
 ## 5-Minute Setup
 
 ### 1. Install (1 minute)
@@ -17,6 +68,8 @@ Get up and running with the Fax Batch Sender in 5 minutes!
 cd rfrestperf
 npm install
 ```
+
+**Note:** You may see a deprecation warning for the `boolean` package during installation. This is a transitive dependency from Electron and can be safely ignored - it doesn't affect the application's functionality.
 
 ### 2. Configure (2 minutes)
 
