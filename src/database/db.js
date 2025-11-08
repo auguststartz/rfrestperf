@@ -63,7 +63,50 @@ async function initializeDatabase() {
     const schema = fs.readFileSync(schemaPath, 'utf8');
 
     await client.query('BEGIN');
-    await client.query(schema);
+
+    // Split schema into individual statements
+    // Handle function definitions that use $$ delimiters and contain semicolons
+    const statements = [];
+    let currentStatement = '';
+    let inDollarQuote = false;
+
+    const lines = schema.split('\n');
+    for (const line of lines) {
+      // Skip comment-only lines
+      if (line.trim().startsWith('--')) {
+        continue;
+      }
+
+      // Track $$ delimiters for function definitions
+      if (line.includes('$$')) {
+        inDollarQuote = !inDollarQuote;
+      }
+
+      currentStatement += line + '\n';
+
+      // Split on semicolons only when not inside $$ delimiters
+      if (line.includes(';') && !inDollarQuote) {
+        const trimmed = currentStatement.trim();
+        if (trimmed.length > 0) {
+          statements.push(trimmed);
+        }
+        currentStatement = '';
+      }
+    }
+
+    // Add any remaining statement
+    const trimmed = currentStatement.trim();
+    if (trimmed.length > 0) {
+      statements.push(trimmed);
+    }
+
+    // Execute each statement individually
+    for (const statement of statements) {
+      if (statement) {
+        await client.query(statement);
+      }
+    }
+
     await client.query('COMMIT');
 
     console.log('Database schema initialized successfully');
