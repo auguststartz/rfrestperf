@@ -102,7 +102,17 @@ async function initializeDatabase() {
     // All CREATE statements have IF NOT EXISTS, making them idempotent
     for (const statement of statements) {
       if (statement) {
-        await client.query(statement);
+        try {
+          await client.query(statement);
+        } catch (error) {
+          // Ignore duplicate relation errors (42P07) since we have IF NOT EXISTS
+          // This handles cases where indexes already exist from partial migrations
+          if (error.code === '42P07') {
+            console.log(`Skipping already existing object: ${error.message}`);
+            continue;
+          }
+          throw error;
+        }
       }
     }
 
