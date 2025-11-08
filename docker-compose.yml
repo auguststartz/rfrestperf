@@ -1,0 +1,73 @@
+version: '3.8'
+
+services:
+  # PostgreSQL Database
+  database:
+    image: postgres:15-alpine
+    container_name: fax-database
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: fax_tracking
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./src/database/schema.sql:/docker-entrypoint-initdb.d/schema.sql:ro
+    ports:
+      - "5432:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d fax_tracking"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - fax-network
+
+  # Node.js REST API Server
+  server:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: fax-server
+    restart: unless-stopped
+    depends_on:
+      database:
+        condition: service_healthy
+    environment:
+      # Database Configuration
+      DB_HOST: database
+      DB_PORT: 5432
+      DB_NAME: fax_tracking
+      DB_USER: postgres
+      DB_PASSWORD: postgres
+
+      # Server Configuration
+      PORT: 3000
+      NODE_ENV: production
+
+      # Application Configuration (defaults - override in .env)
+      BATCH_SIZE: ${BATCH_SIZE:-100}
+      MAX_CONCURRENT_FAXES: ${MAX_CONCURRENT_FAXES:-10}
+      RETRY_ATTEMPTS: ${RETRY_ATTEMPTS:-3}
+      RETRY_DELAY_MS: ${RETRY_DELAY_MS:-5000}
+
+      # FAX API Configuration (must be provided)
+      FAX_API_URL: ${FAX_API_URL}
+      FAX_USERNAME: ${FAX_USERNAME}
+      FAX_PASSWORD: ${FAX_PASSWORD}
+    volumes:
+      - uploads_data:/app/uploads
+    ports:
+      - "3000:3000"
+    networks:
+      - fax-network
+
+volumes:
+  postgres_data:
+    driver: local
+  uploads_data:
+    driver: local
+
+networks:
+  fax-network:
+    driver: bridge
