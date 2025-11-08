@@ -100,17 +100,17 @@ CREATE TABLE IF NOT EXISTS fax_metrics (
 );
 
 -- Create indexes for performance
-CREATE INDEX idx_fax_batches_status ON fax_batches(status);
-CREATE INDEX idx_fax_batches_created_at ON fax_batches(created_at);
-CREATE INDEX idx_fax_submissions_batch_id ON fax_submissions(batch_id);
-CREATE INDEX idx_fax_submissions_status ON fax_submissions(status);
-CREATE INDEX idx_fax_submissions_fax_handle ON fax_submissions(fax_handle);
-CREATE INDEX idx_fax_submissions_document_id ON fax_submissions(document_id);
-CREATE INDEX idx_fax_submissions_created_at ON fax_submissions(created_at);
-CREATE INDEX idx_fax_activities_submission_id ON fax_activities(submission_id);
-CREATE INDEX idx_fax_activities_timestamp ON fax_activities(timestamp);
-CREATE INDEX idx_fax_metrics_date ON fax_metrics(date);
-CREATE INDEX idx_fax_metrics_date_hour ON fax_metrics(date, hour);
+CREATE INDEX IF NOT EXISTS idx_fax_batches_status ON fax_batches(status);
+CREATE INDEX IF NOT EXISTS idx_fax_batches_created_at ON fax_batches(created_at);
+CREATE INDEX IF NOT EXISTS idx_fax_submissions_batch_id ON fax_submissions(batch_id);
+CREATE INDEX IF NOT EXISTS idx_fax_submissions_status ON fax_submissions(status);
+CREATE INDEX IF NOT EXISTS idx_fax_submissions_fax_handle ON fax_submissions(fax_handle);
+CREATE INDEX IF NOT EXISTS idx_fax_submissions_document_id ON fax_submissions(document_id);
+CREATE INDEX IF NOT EXISTS idx_fax_submissions_created_at ON fax_submissions(created_at);
+CREATE INDEX IF NOT EXISTS idx_fax_activities_submission_id ON fax_activities(submission_id);
+CREATE INDEX IF NOT EXISTS idx_fax_activities_timestamp ON fax_activities(timestamp);
+CREATE INDEX IF NOT EXISTS idx_fax_metrics_date ON fax_metrics(date);
+CREATE INDEX IF NOT EXISTS idx_fax_metrics_date_hour ON fax_metrics(date, hour);
 
 -- Create function to update updated_at timestamp
 CREATE OR REPLACE FUNCTION update_updated_at_column()
