@@ -2,11 +2,13 @@
   "name": "fax-batch-sender",
   "version": "1.0.0",
   "description": "Electron app for batch fax sending with PostgreSQL tracking and Grafana integration",
-  "main": "src/main.js",
+  "main": "src/server.js",
   "//": "Note: 'boolean' deprecation warning is from Electron's dependencies and can be safely ignored",
   "scripts": {
-    "start": "electron .",
-    "dev": "electron . --dev",
+    "start": "node src/server.js",
+    "dev": "nodemon src/server.js",
+    "start:electron": "electron src/main.js",
+    "dev:electron": "electron src/main.js --dev",
     "build": "electron-builder",
     "postinstall": "electron-builder install-app-deps",
     "db:migrate": "node src/database/migrate.js"
@@ -26,7 +28,9 @@
     "dotenv": "^16.4.7",
     "form-data": "^4.0.1",
     "winston": "^3.17.0",
-    "date-fns": "^2.30.0"
+    "date-fns": "^2.30.0",
+    "express": "^4.18.2",
+    "multer": "^1.4.5-lts.1"
   },
   "devDependencies": {
     "electron": "^27.3.11",
