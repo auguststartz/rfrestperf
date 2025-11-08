@@ -45,6 +45,25 @@ An Electron desktop application for batch fax sending via OpenText Fax REST API 
 - **OpenText Fax Server**: Version 16 EP6 or later
 - **Grafana** (Optional): v9.0 or higher for dashboards
 
+## Deployment Options
+
+### Option 1: Docker Deployment (Recommended)
+
+For the easiest setup with a self-contained environment including both the database and server, use Docker:
+
+See [DOCKER.md](./DOCKER.md) for complete Docker deployment instructions.
+
+**Quick start:**
+```bash
+cp .env.docker .env
+# Edit .env with your FAX API credentials
+docker-compose up -d
+```
+
+### Option 2: Manual Installation
+
+For development or custom deployments, follow the manual installation steps below.
+
 ## Installation
 
 ### 1. Clone and Install Dependencies
