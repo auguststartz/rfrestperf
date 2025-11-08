@@ -7,10 +7,8 @@ WORKDIR /app
 # Copy package files
 COPY package.json package-lock.json ./
 
-# Install dependencies
-# Note: Installing all deps (including dev) to satisfy postinstall script
-# The postinstall script (electron-builder install-app-deps) won't affect the server
-RUN npm ci
+# Install production dependencies only
+RUN npm ci --omit=dev
 
 # Copy application source
 COPY src/ ./src/
