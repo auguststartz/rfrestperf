@@ -8,7 +8,8 @@ WORKDIR /app
 COPY package*.json ./
 
 # Install dependencies
-RUN npm ci --only=production
+# Skip postinstall script as it's only needed for Electron app, not for the REST API server
+RUN npm ci --omit=dev --ignore-scripts
 
 # Copy application source
 COPY src/ ./src/
