@@ -8,8 +8,9 @@ WORKDIR /app
 COPY package*.json ./
 
 # Install dependencies
-# Skip postinstall script as it's only needed for Electron app, not for the REST API server
-RUN npm ci --omit=dev --ignore-scripts
+# Note: Installing all deps (including dev) to satisfy postinstall script
+# The postinstall script (electron-builder install-app-deps) won't affect the server
+RUN npm ci
 
 # Copy application source
 COPY src/ ./src/
