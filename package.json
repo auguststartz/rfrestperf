@@ -10,7 +10,6 @@
     "start:electron": "electron src/main.js",
     "dev:electron": "electron src/main.js --dev",
     "build": "electron-builder",
-    "postinstall": "electron-builder install-app-deps",
     "db:migrate": "node src/database/migrate.js"
   },
   "keywords": [
