@@ -56,6 +56,8 @@ class FaxApiClient {
     try {
       this._initializeAxios();
 
+      console.log(`Attempting to connect to Fax Server at: ${this.baseURL}`);
+
       // Create base64 encoded credentials for basic authentication
       const credentials = Buffer.from(`${this.username}:${this.password}`).toString('base64');
 
@@ -88,12 +90,22 @@ class FaxApiClient {
             };
           }
         }
+        console.error('✗ Login failed: No session cookie received from server');
         throw new Error('No session cookie received from server');
       } else {
+        console.error(`✗ Login failed with status ${response.status}: ${response.statusText}`);
         throw new Error(`Login failed with status ${response.status}`);
       }
     } catch (error) {
-      console.error('Login error:', error.message);
+      console.error('✗ Fax Server login error:', {
+        url: this.baseURL,
+        username: this.username,
+        error: error.message,
+        code: error.code,
+        status: error.response?.status,
+        statusText: error.response?.statusText,
+        responseData: error.response?.data
+      });
       throw new Error(`Failed to login to fax server: ${error.message}`);
     }
   }
