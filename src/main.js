@@ -208,16 +208,25 @@ ipcMain.handle('select-file', async () => {
 // Test API connection
 ipcMain.handle('test-api-connection', async () => {
   try {
+    console.log('Testing connection to Fax Server...');
     const FaxApiClient = require('./api/faxApi');
     const testClient = new FaxApiClient();
     const loginResult = await testClient.login();
 
     if (loginResult.success) {
+      console.log(`✓ Test connection successful to server: ${loginResult.server}`);
       await testClient.logout();
       return { success: true, message: 'Connected successfully', server: loginResult.server };
     }
+    console.error('✗ Test connection failed: Login unsuccessful');
     return { success: false, error: 'Login failed' };
   } catch (error) {
+    console.error('✗ Test connection failed:', {
+      message: error.message,
+      stack: error.stack,
+      code: error.code,
+      response: error.response?.data
+    });
     return { success: false, error: error.message };
   }
 });

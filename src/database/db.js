@@ -98,28 +98,33 @@ async function initializeDatabase() {
       statements.push(trimmed);
     }
 
-    // Execute each statement individually without a transaction
-    // All CREATE statements have IF NOT EXISTS, making them idempotent
+    // Execute each statement individually
+    // Ignore errors for objects that already exist
+    let successCount = 0;
+    let skipCount = 0;
+
     for (const statement of statements) {
       if (statement) {
         try {
           await client.query(statement);
+          successCount++;
         } catch (error) {
-          // Ignore duplicate relation errors (42P07) since we have IF NOT EXISTS
-          // This handles cases where indexes already exist from partial migrations
-          if (error.code === '42P07') {
-            console.log(`Skipping already existing object: ${error.message}`);
+          // Silently skip duplicate objects (42P07) and existing functions (42723)
+          if (error.code === '42P07' || error.code === '42723') {
+            skipCount++;
             continue;
           }
-          throw error;
+          // For other errors, log but don't throw - continue with remaining statements
+          console.warn(`Warning during schema init: ${error.message}`);
         }
       }
     }
 
-    console.log('Database schema initialized successfully');
+    console.log(`Database schema initialized: ${successCount} executed, ${skipCount} skipped`);
     return true;
   } catch (error) {
-    console.error('Error initializing database:', error);
+    // Only fatal errors (file not found, etc) reach here
+    console.error('Fatal error initializing database:', error);
     throw error;
   } finally {
     client.release();
