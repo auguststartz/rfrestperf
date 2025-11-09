@@ -9,9 +9,10 @@ const logger = require('../utils/logger');
  * Handles batch submission of faxes with rate limiting and progress tracking
  */
 class BatchProcessor extends EventEmitter {
-  constructor() {
+  constructor(connectionSettings = null) {
     super();
-    this.faxApi = new FaxApiClient();
+    this.connectionSettings = connectionSettings;
+    this.faxApi = connectionSettings ? new FaxApiClient(connectionSettings) : new FaxApiClient();
     this.isProcessing = false;
     this.currentBatch = null;
     this.processedCount = 0;
@@ -19,6 +20,16 @@ class BatchProcessor extends EventEmitter {
     this.maxConcurrent = parseInt(process.env.MAX_CONCURRENT_FAXES) || 10;
     this.batchSize = parseInt(process.env.BATCH_SIZE) || 100;
     this.activeRequests = new Set();
+  }
+
+  /**
+   * Update connection settings
+   * @param {Object} connectionSettings - New connection settings
+   */
+  updateConnectionSettings(connectionSettings) {
+    this.connectionSettings = connectionSettings;
+    this.faxApi = connectionSettings ? new FaxApiClient(connectionSettings) : new FaxApiClient();
+    logger.log('✓ Batch processor connection settings updated');
   }
 
   /**

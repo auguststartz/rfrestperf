@@ -8,8 +8,16 @@ require('dotenv').config();
 
 // Global references
 let mainWindow = null;
+let settingsWindow = null;
 let batchProcessor = null;
 let metricsCollector = null;
+
+// Connection settings storage
+let connectionSettings = {
+  faxApiUrl: process.env.FAX_API_URL || '',
+  faxUsername: process.env.FAX_USERNAME || '',
+  faxPassword: process.env.FAX_PASSWORD || ''
+};
 
 /**
  * Create the main application window
@@ -35,6 +43,36 @@ function createWindow() {
 
   mainWindow.on('closed', () => {
     mainWindow = null;
+  });
+}
+
+/**
+ * Create the settings window
+ */
+function createSettingsWindow() {
+  // Don't create a new window if one already exists
+  if (settingsWindow) {
+    settingsWindow.focus();
+    return;
+  }
+
+  settingsWindow = new BrowserWindow({
+    width: 550,
+    height: 500,
+    webPreferences: {
+      nodeIntegration: true,
+      contextIsolation: false
+    },
+    title: 'Connection Settings',
+    parent: mainWindow,
+    modal: true,
+    resizable: false
+  });
+
+  settingsWindow.loadFile(path.join(__dirname, 'renderer/settings.html'));
+
+  settingsWindow.on('closed', () => {
+    settingsWindow = null;
   });
 }
 
@@ -211,7 +249,11 @@ ipcMain.handle('test-api-connection', async () => {
   try {
     logger.log('Testing connection to Fax Server...');
     const FaxApiClient = require('./api/faxApi');
-    const testClient = new FaxApiClient();
+
+    // Use saved settings if they exist, otherwise use environment variables
+    const hasSettings = connectionSettings.faxApiUrl && connectionSettings.faxUsername && connectionSettings.faxPassword;
+    const testClient = hasSettings ? new FaxApiClient(connectionSettings) : new FaxApiClient();
+
     const loginResult = await testClient.login();
 
     if (loginResult.success) {
@@ -223,6 +265,71 @@ ipcMain.handle('test-api-connection', async () => {
     return { success: false, error: 'Login failed' };
   } catch (error) {
     logger.error('✗ Test connection failed:', {
+      message: error.message,
+      stack: error.stack,
+      code: error.code,
+      response: error.response?.data
+    });
+    return { success: false, error: error.message };
+  }
+});
+
+// Open connection settings window
+ipcMain.handle('open-connection-settings', async () => {
+  createSettingsWindow();
+  return { success: true };
+});
+
+// Get current connection settings
+ipcMain.handle('get-connection-settings', async () => {
+  return connectionSettings;
+});
+
+// Save connection settings
+ipcMain.handle('save-connection-settings', async (event, settings) => {
+  try {
+    // Validate settings
+    if (!settings.faxApiUrl || !settings.faxUsername || !settings.faxPassword) {
+      return { success: false, error: 'All fields are required' };
+    }
+
+    // Update in-memory settings
+    connectionSettings = {
+      faxApiUrl: settings.faxApiUrl.trim(),
+      faxUsername: settings.faxUsername.trim(),
+      faxPassword: settings.faxPassword
+    };
+
+    // Update batch processor with new settings
+    if (batchProcessor) {
+      batchProcessor.updateConnectionSettings(connectionSettings);
+    }
+
+    logger.log('✓ Connection settings saved successfully');
+    return { success: true };
+  } catch (error) {
+    logger.error('Error saving connection settings:', error);
+    return { success: false, error: error.message };
+  }
+});
+
+// Test connection with custom settings
+ipcMain.handle('test-connection-with-settings', async (event, settings) => {
+  try {
+    logger.log('Testing connection with custom settings...');
+    const FaxApiClient = require('./api/faxApi');
+    const testClient = new FaxApiClient(settings);
+    const loginResult = await testClient.login();
+
+    if (loginResult.success) {
+      logger.log(`✓ Test connection successful to server: ${loginResult.server}`);
+      await testClient.logout();
+      return { success: true, message: 'Connected successfully', server: loginResult.server };
+    }
+    logger.error('✗ Test connection failed: Login unsuccessful');
+    return { success: false, error: 'Login failed' };
+  } catch (error) {
+    logger.error('✗ Test connection with custom settings failed:', {
       message: error.message,
       stack: error.stack,
       code: error.code,
