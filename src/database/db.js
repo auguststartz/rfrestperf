@@ -1,6 +1,7 @@
 const { Pool } = require('pg');
 const fs = require('fs');
 const path = require('path');
+const logger = require('../utils/logger');
 require('dotenv').config();
 
 // PostgreSQL connection pool
@@ -17,11 +18,11 @@ const pool = new Pool({
 
 // Test connection
 pool.on('connect', () => {
-  console.log('Connected to PostgreSQL database');
+  logger.log('Connected to PostgreSQL database');
 });
 
 pool.on('error', (err) => {
-  console.error('Unexpected error on idle client', err);
+  logger.error('Unexpected error on idle client', err);
   process.exit(-1);
 });
 
@@ -36,10 +37,10 @@ async function query(text, params) {
   try {
     const res = await pool.query(text, params);
     const duration = Date.now() - start;
-    console.log('Executed query', { text, duration, rows: res.rowCount });
+    logger.log('Executed query', { text, duration, rows: res.rowCount });
     return res;
   } catch (error) {
-    console.error('Database query error:', error);
+    logger.error('Database query error:', error);
     throw error;
   }
 }
@@ -115,16 +116,16 @@ async function initializeDatabase() {
             continue;
           }
           // For other errors, log but don't throw - continue with remaining statements
-          console.warn(`Warning during schema init: ${error.message}`);
+          logger.warn(`Warning during schema init: ${error.message}`);
         }
       }
     }
 
-    console.log(`Database schema initialized: ${successCount} executed, ${skipCount} skipped`);
+    logger.log(`Database schema initialized: ${successCount} executed, ${skipCount} skipped`);
     return true;
   } catch (error) {
     // Only fatal errors (file not found, etc) reach here
-    console.error('Fatal error initializing database:', error);
+    logger.error('Fatal error initializing database:', error);
     throw error;
   } finally {
     client.release();

@@ -2,6 +2,7 @@ const FaxApiClient = require('../api/faxApi');
 const db = require('../database/db');
 const EventEmitter = require('events');
 const { format } = require('date-fns');
+const logger = require('../utils/logger');
 
 /**
  * Batch Fax Processor
@@ -86,13 +87,13 @@ class BatchProcessor extends EventEmitter {
 
       // Start processing in background
       this._processBatch().catch(error => {
-        console.error('Batch processing error:', error);
+        logger.error('Batch processing error:', error);
         this.emit('batchError', { batchId, error: error.message });
       });
 
       return batchId;
     } catch (error) {
-      console.error('Failed to start batch:', error);
+      logger.error('Failed to start batch:', error);
       throw error;
     }
   }
@@ -191,7 +192,7 @@ class BatchProcessor extends EventEmitter {
       });
 
     } catch (error) {
-      console.error('Batch processing failed:', error);
+      logger.error('Batch processing failed:', error);
 
       await db.updateBatch(batchId, {
         status: 'failed',
@@ -268,13 +269,13 @@ class BatchProcessor extends EventEmitter {
 
       // Start monitoring this fax in background
       this._monitorFax(faxHandle, submissionId).catch(error => {
-        console.error(`Error monitoring fax ${faxHandle}:`, error);
+        logger.error(`Error monitoring fax ${faxHandle}:`, error);
       });
 
       return { success: true, sendJobId, submissionId };
 
     } catch (error) {
-      console.error(`Failed to send fax ${submissionNumber}:`, error.message);
+      logger.error(`Failed to send fax ${submissionNumber}:`, error.message);
 
       this.currentBatch.failedCount++;
 
@@ -291,7 +292,7 @@ class BatchProcessor extends EventEmitter {
             error_message: error.message
           });
         } catch (dbError) {
-          console.error('Failed to create failed submission record:', dbError);
+          logger.error('Failed to create failed submission record:', dbError);
         }
       }
 
@@ -388,7 +389,7 @@ class BatchProcessor extends EventEmitter {
 
         attempts++;
       } catch (error) {
-        console.error(`Error monitoring fax ${faxHandle}:`, error.message);
+        logger.error(`Error monitoring fax ${faxHandle}:`, error.message);
         attempts++;
       }
     }
@@ -421,7 +422,7 @@ class BatchProcessor extends EventEmitter {
         });
       }
     } catch (error) {
-      console.error('Failed to store activities:', error.message);
+      logger.error('Failed to store activities:', error.message);
     }
   }
 

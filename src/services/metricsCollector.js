@@ -1,5 +1,6 @@
 const db = require('../database/db');
 const { format, startOfDay, startOfHour } = require('date-fns');
+const logger = require('../utils/logger');
 
 /**
  * Metrics Collector Service
@@ -15,17 +16,17 @@ class MetricsCollector {
    * Start automatic metrics collection
    */
   start() {
-    console.log('Starting metrics collector...');
+    logger.log('Starting metrics collector...');
 
     // Collect immediately
     this.collectMetrics().catch(error => {
-      console.error('Initial metrics collection failed:', error);
+      logger.error('Initial metrics collection failed:', error);
     });
 
     // Then collect periodically
     this.collectionInterval = setInterval(() => {
       this.collectMetrics().catch(error => {
-        console.error('Periodic metrics collection failed:', error);
+        logger.error('Periodic metrics collection failed:', error);
       });
     }, this.intervalMs);
   }
@@ -37,7 +38,7 @@ class MetricsCollector {
     if (this.collectionInterval) {
       clearInterval(this.collectionInterval);
       this.collectionInterval = null;
-      console.log('Metrics collector stopped');
+      logger.log('Metrics collector stopped');
     }
   }
 
@@ -50,7 +51,7 @@ class MetricsCollector {
       const currentDate = startOfDay(now);
       const currentHour = now.getHours();
 
-      console.log(`Collecting metrics for ${format(currentDate, 'yyyy-MM-dd')} hour ${currentHour}...`);
+      logger.log(`Collecting metrics for ${format(currentDate, 'yyyy-MM-dd')} hour ${currentHour}...`);
 
       // Get metrics from the last hour
       const hourStart = startOfHour(now);
@@ -93,10 +94,10 @@ class MetricsCollector {
           total_batches: parseInt(metrics.total_batches) || 0
         });
 
-        console.log(`✓ Metrics collected: ${metrics.total_submitted} submissions, ${metrics.total_succeeded} succeeded`);
+        logger.log(`✓ Metrics collected: ${metrics.total_submitted} submissions, ${metrics.total_succeeded} succeeded`);
       }
     } catch (error) {
-      console.error('Metrics collection error:', error);
+      logger.error('Metrics collection error:', error);
       throw error;
     }
   }
@@ -132,7 +133,7 @@ class MetricsCollector {
 
       return result.rows;
     } catch (error) {
-      console.error('Get metrics error:', error);
+      logger.error('Get metrics error:', error);
       throw error;
     }
   }
@@ -191,7 +192,7 @@ class MetricsCollector {
         recentCompletions: recentCompletions.rows || []
       };
     } catch (error) {
-      console.error('Get dashboard data error:', error);
+      logger.error('Get dashboard data error:', error);
       throw error;
     }
   }
@@ -229,7 +230,7 @@ class MetricsCollector {
 
       return result.rows[0] || {};
     } catch (error) {
-      console.error('Get performance stats error:', error);
+      logger.error('Get performance stats error:', error);
       throw error;
     }
   }

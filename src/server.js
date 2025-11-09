@@ -4,6 +4,7 @@ const multer = require('multer');
 const db = require('./database/db');
 const BatchProcessor = require('./services/batchProcessor');
 const MetricsCollector = require('./services/metricsCollector');
+const logger = require('./utils/logger');
 require('dotenv').config();
 
 const app = express();
@@ -29,11 +30,11 @@ const upload = multer({
  */
 async function initialize() {
   try {
-    console.log('Initializing application...');
+    logger.log('Initializing application...');
 
     // Initialize database
     await db.initializeDatabase();
-    console.log('✓ Database initialized');
+    logger.log('✓ Database initialized');
 
     // Initialize batch processor
     batchProcessor = new BatchProcessor();
@@ -52,15 +53,15 @@ async function initialize() {
       });
     });
 
-    console.log('✓ Batch processor initialized');
+    logger.log('✓ Batch processor initialized');
 
     // Initialize metrics collector
     metricsCollector = new MetricsCollector();
     metricsCollector.start();
-    console.log('✓ Metrics collector started');
+    logger.log('✓ Metrics collector started');
 
   } catch (error) {
-    console.error('Initialization failed:', error);
+    logger.error('Initialization failed:', error);
     process.exit(1);
   }
 }
@@ -74,7 +75,7 @@ function broadcastToClients(event, data) {
     try {
       client.write(message);
     } catch (error) {
-      console.error('Error broadcasting to client:', error);
+      logger.error('Error broadcasting to client:', error);
       activeBatchClients.delete(client);
     }
   });
@@ -102,7 +103,7 @@ app.post('/api/batch/start', upload.single('file'), async (req, res) => {
     const batchId = await batchProcessor.startBatch(batchConfig);
     res.json({ success: true, batchId });
   } catch (error) {
-    console.error('Error starting batch:', error);
+    logger.error('Error starting batch:', error);
     res.status(500).json({ success: false, error: error.message });
   }
 });
@@ -121,7 +122,7 @@ app.get('/api/batch/status/:batchId?', async (req, res) => {
       res.json({ success: true, status });
     }
   } catch (error) {
-    console.error('Error getting batch status:', error);
+    logger.error('Error getting batch status:', error);
     res.status(500).json({ success: false, error: error.message });
   }
 });
@@ -133,7 +134,7 @@ app.get('/api/batches/recent', async (req, res) => {
     const batches = await db.getRecentBatches(limit);
     res.json({ success: true, batches });
   } catch (error) {
-    console.error('Error getting recent batches:', error);
+    logger.error('Error getting recent batches:', error);
     res.status(500).json({ success: false, error: error.message });
   }
 });
@@ -144,7 +145,7 @@ app.get('/api/dashboard', async (req, res) => {
     const data = await metricsCollector.getDashboardData();
     res.json({ success: true, data });
   } catch (error) {
-    console.error('Error getting dashboard data:', error);
+    logger.error('Error getting dashboard data:', error);
     res.status(500).json({ success: false, error: error.message });
   }
 });
@@ -156,7 +157,7 @@ app.get('/api/performance/stats', async (req, res) => {
     const stats = await metricsCollector.getPerformanceStats(days);
     res.json({ success: true, stats });
   } catch (error) {
-    console.error('Error getting performance stats:', error);
+    logger.error('Error getting performance stats:', error);
     res.status(500).json({ success: false, error: error.message });
   }
 });
@@ -171,7 +172,7 @@ app.get('/api/metrics', async (req, res) => {
     );
     res.json({ success: true, metrics });
   } catch (error) {
-    console.error('Error getting metrics:', error);
+    logger.error('Error getting metrics:', error);
     res.status(500).json({ success: false, error: error.message });
   }
 });
@@ -194,7 +195,7 @@ app.get('/api/test-connection', async (req, res) => {
       res.status(500).json({ success: false, error: 'Login failed' });
     }
   } catch (error) {
-    console.error('Error testing connection:', error);
+    logger.error('Error testing connection:', error);
     res.status(500).json({ success: false, error: error.message });
   }
 });
@@ -232,7 +233,7 @@ app.get('*', (req, res) => {
  * Error handler
  */
 app.use((err, req, res, next) => {
-  console.error('Unhandled error:', err);
+  logger.error('Unhandled error:', err);
   res.status(500).json({
     success: false,
     error: err.message || 'Internal server error'
@@ -246,7 +247,7 @@ async function startServer() {
   await initialize();
 
   app.listen(PORT, '0.0.0.0', () => {
-    console.log(`
+    logger.log(`
 ╔═══════════════════════════════════════════════════╗
 ║                                                   ║
 ║       📠  Fax Batch Sender - Web Edition         ║
@@ -263,14 +264,14 @@ async function startServer() {
  * Graceful shutdown
  */
 async function shutdown() {
-  console.log('\nShutting down gracefully...');
+  logger.log('\nShutting down gracefully...');
 
   // Close all SSE connections
   activeBatchClients.forEach(client => {
     try {
       client.end();
     } catch (error) {
-      console.error('Error closing client connection:', error);
+      logger.error('Error closing client connection:', error);
     }
   });
   activeBatchClients.clear();
@@ -288,7 +289,7 @@ async function shutdown() {
   // Close database connection
   await db.close();
 
-  console.log('✓ Shutdown complete');
+  logger.log('✓ Shutdown complete');
   process.exit(0);
 }
 
@@ -297,15 +298,15 @@ process.on('SIGINT', shutdown);
 
 // Handle uncaught exceptions
 process.on('uncaughtException', (error) => {
-  console.error('Uncaught exception:', error);
+  logger.error('Uncaught exception:', error);
 });
 
 process.on('unhandledRejection', (reason, promise) => {
-  console.error('Unhandled rejection at:', promise, 'reason:', reason);
+  logger.error('Unhandled rejection at:', promise, 'reason:', reason);
 });
 
 // Start the server
 startServer().catch(error => {
-  console.error('Failed to start server:', error);
+  logger.error('Failed to start server:', error);
   process.exit(1);
 });
