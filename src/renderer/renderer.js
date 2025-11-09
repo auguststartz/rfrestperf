@@ -187,32 +187,13 @@ async function handleFileSelect() {
 }
 
 /**
- * Test API connection
+ * Test API connection - Opens the settings window
  */
 async function testConnection() {
-  const btn = document.getElementById('testConnectionBtn');
-  const status = document.getElementById('connectionStatus');
-
-  btn.disabled = true;
-  btn.textContent = 'Testing...';
-  status.className = 'status-indicator status-warning';
-
   try {
-    const result = await ipcRenderer.invoke('test-api-connection');
-
-    if (result.success) {
-      status.className = 'status-indicator status-success';
-      alert(`✓ Connected successfully to ${result.server}`);
-    } else {
-      status.className = 'status-indicator status-error';
-      alert(`✗ Connection failed: ${result.error}`);
-    }
+    await ipcRenderer.invoke('open-connection-settings');
   } catch (error) {
-    status.className = 'status-indicator status-error';
-    alert(`✗ Error: ${error.message}`);
-  } finally {
-    btn.disabled = false;
-    btn.textContent = 'Test Connection';
+    alert(`✗ Error opening settings: ${error.message}`);
   }
 }
 

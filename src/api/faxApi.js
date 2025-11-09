@@ -10,10 +10,17 @@ require('dotenv').config();
  * Based on OpenText Fax Web API SDK Installation and Quick Start Guide
  */
 class FaxApiClient {
-  constructor() {
-    this.baseURL = process.env.FAX_API_URL;
-    this.username = process.env.FAX_USERNAME;
-    this.password = process.env.FAX_PASSWORD;
+  constructor(customSettings = null) {
+    // Use custom settings if provided, otherwise fall back to environment variables
+    if (customSettings) {
+      this.baseURL = customSettings.faxApiUrl;
+      this.username = customSettings.faxUsername;
+      this.password = customSettings.faxPassword;
+    } else {
+      this.baseURL = process.env.FAX_API_URL;
+      this.username = process.env.FAX_USERNAME;
+      this.password = process.env.FAX_PASSWORD;
+    }
     this.sessionCookie = null;
     this.axiosInstance = null;
   }

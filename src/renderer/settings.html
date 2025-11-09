@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Connection Settings</title>
+    <link rel="stylesheet" href="settings-styles.css">
+</head>
+<body>
+    <div class="settings-container">
+        <h2>Fax Server Connection Settings</h2>
+
+        <form id="settingsForm">
+            <div class="form-group">
+                <label for="faxApiUrl">Fax API URL:</label>
+                <input type="text" id="faxApiUrl" name="faxApiUrl"
+                       placeholder="https://your-fax-server/RightFax/API"
+                       required>
+                <small>Example: https://fax.company.com/RightFax/API</small>
+            </div>
+
+            <div class="form-group">
+                <label for="faxUsername">Username:</label>
+                <input type="text" id="faxUsername" name="faxUsername"
+                       placeholder="admin"
+                       required>
+            </div>
+
+            <div class="form-group">
+                <label for="faxPassword">Password:</label>
+                <input type="password" id="faxPassword" name="faxPassword"
+                       placeholder="Password"
+                       required>
+                <div class="checkbox-group">
+                    <input type="checkbox" id="showPassword">
+                    <label for="showPassword">Show password</label>
+                </div>
+            </div>
+
+            <div class="button-group">
+                <button type="button" id="testConnectionBtn" class="btn btn-primary">
+                    Test Connection
+                </button>
+                <button type="submit" id="saveBtn" class="btn btn-success">
+                    Save Settings
+                </button>
+                <button type="button" id="cancelBtn" class="btn btn-secondary">
+                    Cancel
+                </button>
+            </div>
+        </form>
+
+        <div id="statusMessage" class="status-message"></div>
+    </div>
+
+    <script src="settings-renderer.js"></script>
+</body>
+</html>
