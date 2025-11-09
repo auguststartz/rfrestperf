@@ -2,6 +2,7 @@ const axios = require('axios');
 const FormData = require('form-data');
 const fs = require('fs');
 const path = require('path');
+const logger = require('../utils/logger');
 require('dotenv').config();
 
 /**
@@ -36,7 +37,7 @@ class FaxApiClient {
     this.axiosInstance.interceptors.response.use(
       response => response,
       error => {
-        console.error('API Request failed:', {
+        logger.error('API Request failed:', {
           url: error.config?.url,
           method: error.config?.method,
           status: error.response?.status,
@@ -56,7 +57,7 @@ class FaxApiClient {
     try {
       this._initializeAxios();
 
-      console.log(`Attempting to connect to Fax Server at: ${this.baseURL}`);
+      logger.log(`Attempting to connect to Fax Server at: ${this.baseURL}`);
 
       // Create base64 encoded credentials for basic authentication
       const credentials = Buffer.from(`${this.username}:${this.password}`).toString('base64');
@@ -76,7 +77,7 @@ class FaxApiClient {
           if (authCookie) {
             // Extract just the cookie value
             this.sessionCookie = authCookie.split(';')[0];
-            console.log('✓ Successfully logged in to fax server');
+            logger.log('✓ Successfully logged in to fax server');
 
             // Update axios instance to use session cookie
             this.axiosInstance.defaults.headers.common['Cookie'] = this.sessionCookie;
@@ -90,14 +91,14 @@ class FaxApiClient {
             };
           }
         }
-        console.error('✗ Login failed: No session cookie received from server');
+        logger.error('✗ Login failed: No session cookie received from server');
         throw new Error('No session cookie received from server');
       } else {
-        console.error(`✗ Login failed with status ${response.status}: ${response.statusText}`);
+        logger.error(`✗ Login failed with status ${response.status}: ${response.statusText}`);
         throw new Error(`Login failed with status ${response.status}`);
       }
     } catch (error) {
-      console.error('✗ Fax Server login error:', {
+      logger.error('✗ Fax Server login error:', {
         url: this.baseURL,
         username: this.username,
         error: error.message,
@@ -118,10 +119,10 @@ class FaxApiClient {
     try {
       await this.axiosInstance.get('/logout');
       this.sessionCookie = null;
-      console.log('✓ Successfully logged out from fax server');
+      logger.log('✓ Successfully logged out from fax server');
       return true;
     } catch (error) {
-      console.error('Logout error:', error.message);
+      logger.error('Logout error:', error.message);
       return false;
     }
   }
@@ -159,13 +160,13 @@ class FaxApiClient {
 
       if (response.status === 201) {
         const attachmentUrl = response.headers['location'] || response.data;
-        console.log(`✓ File uploaded successfully: ${fileName}`);
+        logger.log(`✓ File uploaded successfully: ${fileName}`);
         return attachmentUrl;
       } else {
         throw new Error(`Upload failed with status ${response.status}`);
       }
     } catch (error) {
-      console.error('File upload error:', error.message);
+      logger.error('File upload error:', error.message);
       throw new Error(`Failed to upload file: ${error.message}`);
     }
   }
@@ -212,7 +213,7 @@ class FaxApiClient {
 
       if (response.status === 201) {
         const sendJob = response.data;
-        console.log(`✓ Send job created: ID ${sendJob.Id}`);
+        logger.log(`✓ Send job created: ID ${sendJob.Id}`);
         return {
           success: true,
           sendJobId: sendJob.Id,
@@ -226,7 +227,7 @@ class FaxApiClient {
         throw new Error(`Send job creation failed with status ${response.status}`);
       }
     } catch (error) {
-      console.error('Send job creation error:', error.message);
+      logger.error('Send job creation error:', error.message);
       throw new Error(`Failed to create send job: ${error.message}`);
     }
   }
@@ -250,7 +251,7 @@ class FaxApiClient {
         throw new Error(`Failed to get send job with status ${response.status}`);
       }
     } catch (error) {
-      console.error('Get send job error:', error.message);
+      logger.error('Get send job error:', error.message);
       throw new Error(`Failed to get send job: ${error.message}`);
     }
   }
@@ -278,7 +279,7 @@ class FaxApiClient {
         throw new Error(`Failed to get documents with status ${response.status}`);
       }
     } catch (error) {
-      console.error('Get documents error:', error.message);
+      logger.error('Get documents error:', error.message);
       throw new Error(`Failed to get documents: ${error.message}`);
     }
   }
@@ -302,7 +303,7 @@ class FaxApiClient {
         throw new Error(`Failed to get document with status ${response.status}`);
       }
     } catch (error) {
-      console.error('Get document error:', error.message);
+      logger.error('Get document error:', error.message);
       throw new Error(`Failed to get document: ${error.message}`);
     }
   }
@@ -329,7 +330,7 @@ class FaxApiClient {
         throw new Error(`Failed to get activities with status ${response.status}`);
       }
     } catch (error) {
-      console.error('Get document activities error:', error.message);
+      logger.error('Get document activities error:', error.message);
       throw new Error(`Failed to get document activities: ${error.message}`);
     }
   }
@@ -369,7 +370,7 @@ class FaxApiClient {
         throw new Error(`Failed to get received faxes with status ${response.status}`);
       }
     } catch (error) {
-      console.error('Get received faxes error:', error.message);
+      logger.error('Get received faxes error:', error.message);
       throw new Error(`Failed to get received faxes: ${error.message}`);
     }
   }
@@ -388,7 +389,7 @@ class FaxApiClient {
         throw new Error(`Failed to get system features with status ${response.status}`);
       }
     } catch (error) {
-      console.error('Get system features error:', error.message);
+      logger.error('Get system features error:', error.message);
       throw new Error(`Failed to get system features: ${error.message}`);
     }
   }

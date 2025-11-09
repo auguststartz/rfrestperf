@@ -3,6 +3,7 @@ const path = require('path');
 const db = require('./database/db');
 const BatchProcessor = require('./services/batchProcessor');
 const MetricsCollector = require('./services/metricsCollector');
+const logger = require('./utils/logger');
 require('dotenv').config();
 
 // Global references
@@ -42,11 +43,11 @@ function createWindow() {
  */
 async function initialize() {
   try {
-    console.log('Initializing application...');
+    logger.log('Initializing application...');
 
     // Initialize database
     await db.initializeDatabase();
-    console.log('✓ Database initialized');
+    logger.log('✓ Database initialized');
 
     // Initialize batch processor
     batchProcessor = new BatchProcessor();
@@ -96,15 +97,15 @@ async function initialize() {
       sendToRenderer('batch-error', data);
     });
 
-    console.log('✓ Batch processor initialized');
+    logger.log('✓ Batch processor initialized');
 
     // Initialize metrics collector
     metricsCollector = new MetricsCollector();
     metricsCollector.start();
-    console.log('✓ Metrics collector started');
+    logger.log('✓ Metrics collector started');
 
   } catch (error) {
-    console.error('Initialization failed:', error);
+    logger.error('Initialization failed:', error);
     dialog.showErrorBox('Initialization Error', `Failed to initialize application: ${error.message}`);
     app.quit();
   }
@@ -208,20 +209,20 @@ ipcMain.handle('select-file', async () => {
 // Test API connection
 ipcMain.handle('test-api-connection', async () => {
   try {
-    console.log('Testing connection to Fax Server...');
+    logger.log('Testing connection to Fax Server...');
     const FaxApiClient = require('./api/faxApi');
     const testClient = new FaxApiClient();
     const loginResult = await testClient.login();
 
     if (loginResult.success) {
-      console.log(`✓ Test connection successful to server: ${loginResult.server}`);
+      logger.log(`✓ Test connection successful to server: ${loginResult.server}`);
       await testClient.logout();
       return { success: true, message: 'Connected successfully', server: loginResult.server };
     }
-    console.error('✗ Test connection failed: Login unsuccessful');
+    logger.error('✗ Test connection failed: Login unsuccessful');
     return { success: false, error: 'Login failed' };
   } catch (error) {
-    console.error('✗ Test connection failed:', {
+    logger.error('✗ Test connection failed:', {
       message: error.message,
       stack: error.stack,
       code: error.code,
@@ -253,7 +254,7 @@ app.on('activate', () => {
 });
 
 app.on('before-quit', async () => {
-  console.log('Shutting down...');
+  logger.log('Shutting down...');
 
   // Stop batch processor
   if (batchProcessor) {
@@ -268,15 +269,15 @@ app.on('before-quit', async () => {
   // Close database connection
   await db.close();
 
-  console.log('✓ Shutdown complete');
+  logger.log('✓ Shutdown complete');
 });
 
 // Handle uncaught exceptions
 process.on('uncaughtException', (error) => {
-  console.error('Uncaught exception:', error);
+  logger.error('Uncaught exception:', error);
   dialog.showErrorBox('Unexpected Error', error.message);
 });
 
 process.on('unhandledRejection', (reason, promise) => {
-  console.error('Unhandled rejection at:', promise, 'reason:', reason);
+  logger.error('Unhandled rejection at:', promise, 'reason:', reason);
 });
