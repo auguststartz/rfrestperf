@@ -27,8 +27,9 @@ function createWindow() {
     width: 1200,
     height: 800,
     webPreferences: {
-      nodeIntegration: true,
-      contextIsolation: false
+      preload: path.join(__dirname, 'preload.js'),
+      contextIsolation: true,
+      nodeIntegration: false
     },
     title: 'Fax Batch Sender',
     icon: path.join(__dirname, '../assets/icon.png')
@@ -60,8 +61,9 @@ function createSettingsWindow() {
     width: 550,
     height: 500,
     webPreferences: {
-      nodeIntegration: true,
-      contextIsolation: false
+      preload: path.join(__dirname, 'preload.js'),
+      contextIsolation: true,
+      nodeIntegration: false
     },
     title: 'Connection Settings',
     parent: mainWindow,

@@ -1,4 +1,5 @@
-const { ipcRenderer } = require('electron');
+// Use electronAPI from preload script
+const api = window.electronAPI;
 
 // DOM elements
 const form = document.getElementById('settingsForm');
@@ -19,7 +20,7 @@ showPasswordCheckbox.addEventListener('change', () => {
 // Load existing settings on window open
 window.addEventListener('DOMContentLoaded', async () => {
     try {
-        const settings = await ipcRenderer.invoke('get-connection-settings');
+        const settings = await api.getConnectionSettings();
         if (settings) {
             faxApiUrlInput.value = settings.faxApiUrl || '';
             faxUsernameInput.value = settings.faxUsername || '';
@@ -50,7 +51,7 @@ testConnectionBtn.addEventListener('click', async () => {
             faxPassword: faxPasswordInput.value
         };
 
-        const result = await ipcRenderer.invoke('test-connection-with-settings', settings);
+        const result = await api.testConnectionWithSettings(settings);
 
         if (result.success) {
             showStatus(`✓ Connected successfully to ${result.server}`, 'success');
@@ -79,7 +80,7 @@ form.addEventListener('submit', async (e) => {
             faxPassword: faxPasswordInput.value
         };
 
-        const result = await ipcRenderer.invoke('save-connection-settings', settings);
+        const result = await api.saveConnectionSettings(settings);
 
         if (result.success) {
             showStatus('✓ Settings saved successfully!', 'success');
