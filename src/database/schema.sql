@@ -122,11 +122,13 @@ END;
 $$ LANGUAGE plpgsql;
 
 -- Create triggers
+DROP TRIGGER IF EXISTS update_fax_submissions_updated_at ON fax_submissions;
 CREATE TRIGGER update_fax_submissions_updated_at
     BEFORE UPDATE ON fax_submissions
     FOR EACH ROW
     EXECUTE FUNCTION update_updated_at_column();
 
+DROP TRIGGER IF EXISTS update_fax_metrics_updated_at ON fax_metrics;
 CREATE TRIGGER update_fax_metrics_updated_at
     BEFORE UPDATE ON fax_metrics
     FOR EACH ROW
