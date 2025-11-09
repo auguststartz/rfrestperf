@@ -62,8 +62,6 @@ async function initializeDatabase() {
     const schemaPath = path.join(__dirname, 'schema.sql');
     const schema = fs.readFileSync(schemaPath, 'utf8');
 
-    await client.query('BEGIN');
-
     // Split schema into individual statements
     // Handle function definitions that use $$ delimiters and contain semicolons
     const statements = [];
@@ -100,19 +98,27 @@ async function initializeDatabase() {
       statements.push(trimmed);
     }
 
-    // Execute each statement individually
+    // Execute each statement individually without a transaction
+    // All CREATE statements have IF NOT EXISTS, making them idempotent
     for (const statement of statements) {
       if (statement) {
-        await client.query(statement);
+        try {
+          await client.query(statement);
+        } catch (error) {
+          // Ignore duplicate relation errors (42P07) since we have IF NOT EXISTS
+          // This handles cases where indexes already exist from partial migrations
+          if (error.code === '42P07') {
+            console.log(`Skipping already existing object: ${error.message}`);
+            continue;
+          }
+          throw error;
+        }
       }
     }
-
-    await client.query('COMMIT');
 
     console.log('Database schema initialized successfully');
     return true;
   } catch (error) {
-    await client.query('ROLLBACK');
     console.error('Error initializing database:', error);
     throw error;
   } finally {
